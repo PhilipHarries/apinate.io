@@ -1,0 +1,32 @@
+---
+resources:
+- name: apinate.io-repo
+  type: git
+  source:
+    uri: https://github.com/PhilipHarries/apinate.io.git
+    branch: master
+
+jobs:
+- name: html-lint-site
+  public: true
+  build-logs-to-retain: 8
+  plan:
+  - get: apinate.io-repo
+    trigger: true
+  - task: html-lint
+    file: apinate.io-repo/ci/pipelines/html-lint.yml
+
+- name: deploy-site
+  public: true
+  build-logs-to-retain: 8
+  plan:
+  - get: apinate.io-repo
+    passed: [html-lint-site]
+    trigger: true
+  - task: deploy
+    file: apinate.io-repo/ci/pipelines/deploy.yml
+    params:
+      SSH_USER: {{ssh-user}}
+      SSH_KEY: {{ssh-key}}
+      TARGET_SERVER: {{target-server}}
+      DEPLOY_PATH: {{deploy-path}}
